@@ -38,7 +38,7 @@ export default function MyTrips() {
   const router = useRouter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
-  const [tab, setTab] = useState<'booked' | 'driving'>(mode === 'driver' ? 'driving' : 'booked');
+  const isDriver = mode === 'driver';
   const [rides, setRides] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,26 +91,21 @@ export default function MyTrips() {
     <View style={styles.screen}>
       <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 22, paddingBottom: 14 }}>
         <Text style={styles.title}>My trips</Text>
-      </View>
-
-      <View style={styles.tabs}>
-        <TouchableOpacity style={[styles.tab, tab === 'booked' && styles.tabOn]} onPress={() => setTab('booked')} activeOpacity={0.9}>
-          <Text style={tab === 'booked' ? styles.tabTextOn : styles.tabText}>Booked</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.tab, tab === 'driving' && styles.tabOn]} onPress={() => setTab('driving')} activeOpacity={0.9}>
-          <Text style={tab === 'driving' ? styles.tabTextOn : styles.tabText}>As driver</Text>
-        </TouchableOpacity>
+        <Text style={styles.subtitle}>
+          {isDriver ? 'Rides you posted · switch to Rider mode in Profile to see bookings' : 'Rides you booked · switch to Driver mode in Profile to see posted rides'}
+        </Text>
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
+        <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator size="large" color={colors.ink} /></View>
       ) : (
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 20, gap: 12 }}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}>
 
-          {tab === 'driving' && (rides.length === 0 ? (
+          {isDriver && (rides.length === 0 ? (
             <Empty text="You haven't posted any rides yet." />
           ) : rides.map((ride) => (
             <View key={ride._id} style={styles.card}>
@@ -128,7 +123,7 @@ export default function MyTrips() {
             </View>
           )))}
 
-          {tab === 'booked' && (bookings.length === 0 ? (
+          {!isDriver && (bookings.length === 0 ? (
             <Empty text="You haven't booked any rides yet." />
           ) : bookings.map((b) => {
             const p = statusPill(b.status);
@@ -189,6 +184,7 @@ function Empty({ text }: { text: string }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   title: { fontSize: 24, fontFamily: fonts.extra, color: colors.ink, letterSpacing: -0.6 },
+  subtitle: { fontSize: 12, fontFamily: fonts.med, color: colors.textMuted, marginTop: 5, lineHeight: 17 },
   tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 22, marginBottom: 14 },
   tab: { borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 16, backgroundColor: colors.surfaceAlt, borderWidth: 1, borderColor: '#dcdad4' },
   tabOn: { backgroundColor: colors.ink, borderColor: colors.ink },

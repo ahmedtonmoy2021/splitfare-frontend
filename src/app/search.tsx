@@ -209,6 +209,13 @@ export default function Search() {
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        {origin && destination && (
+          <TouchableOpacity style={[styles.findBtn, { marginBottom: insets.bottom + 16 }]} onPress={() => searchRides(origin, destination)} activeOpacity={0.9}>
+            <Text style={styles.findBtnText}>Find rides</Text>
+            <Ionicons name="arrow-forward" size={18} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -301,10 +308,10 @@ export default function Search() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#EAF2FB', paddingHorizontal: 20 },
+  screen: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 20 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   backChevron: { fontSize: 32, color: '#010E39', marginRight: 12, marginTop: -4 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#010E39' },
+  headerTitle: { fontSize: 20, fontFamily: fonts.extra, color: colors.ink },
   searchInner: { flexDirection: 'row', alignItems: 'center' },
   connectorCol: { width: 16, alignItems: 'center', marginRight: 10, height: 96, justifyContent: 'center' },
   originDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: '#010E39' },
@@ -313,16 +320,18 @@ const styles = StyleSheet.create({
   inputsCol: { flex: 1 },
   inputField: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f2f2', borderRadius: 8, paddingHorizontal: 12, height: 44, marginBottom: 8, borderWidth: 1.5, borderColor: 'transparent' },
   inputFieldActive: { borderColor: '#010E39' },
-  fieldInput: { flex: 1, fontSize: 15, color: '#222', paddingVertical: 0 },
+  fieldInput: { flex: 1, fontSize: 15, fontFamily: fonts.semi, color: colors.ink, paddingVertical: 0 },
   suggestList: { flex: 1, marginTop: 10 },
   suggestItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   suggestIconWrap: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#f2f2f2', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  suggestText: { fontSize: 15, color: '#333', flex: 1 },
+  suggestText: { fontSize: 15, color: colors.ink, fontFamily: fonts.med, flex: 1 },
+  findBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.green, borderRadius: radius.md, paddingVertical: 16, marginTop: 8 },
+  findBtnText: { color: '#fff', fontSize: 15, fontFamily: fonts.extra },
   routeChip: { backgroundColor: '#f2f2f2', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14 },
-  routeChipText: { fontSize: 14, color: '#333', fontWeight: '500' },
+  routeChipText: { fontSize: 14, color: colors.ink, fontFamily: fonts.semi },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
-  emptyText: { fontSize: 16, color: '#555', marginTop: 12, fontWeight: '600' },
-  emptySub: { fontSize: 14, color: '#999', marginTop: 4 },
+  emptyText: { fontSize: 16, color: colors.ink, marginTop: 12, fontFamily: fonts.bold },
+  emptySub: { fontSize: 14, color: colors.textMuted, marginTop: 4, fontFamily: fonts.med },
   rideCard: { borderWidth: 1, borderColor: '#e8e8e8', borderRadius: 16, padding: 16, marginBottom: 14, backgroundColor: '#fff' },
   rideTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#010E39', alignItems: 'center', justifyContent: 'center', marginRight: 12 },

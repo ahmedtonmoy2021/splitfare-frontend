@@ -14,6 +14,8 @@ import { colors, fonts, radius, shadow } from '../theme';
 
 const mapStyle = [
   { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#000000' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#c9e6f2' }] },
@@ -104,7 +106,7 @@ export default function ActiveRide() {
 
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
         <View style={styles.handle} />
-        <Text style={styles.title}>Pickup order</Text>
+        <Text style={styles.title}>Pickup points</Text>
         <Text style={styles.sub}>Nearest to you first — riders wait on your route</Text>
 
         {loading ? (
@@ -120,18 +122,30 @@ export default function ActiveRide() {
                   <View style={styles.orderNum}><Text style={styles.orderNumText}>{i + 1}</Text></View>
                   <Avatar user={s.rider} size={40} />
                   <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.riderName} numberOfLines={1}>{s.rider?.name || 'Rider'}</Text>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.riderName} numberOfLines={1}>{s.rider?.name || 'Rider'}</Text>
+                      {paid && (
+                        <View style={styles.paidTag}>
+                          <Ionicons name="checkmark-circle" size={12} color={colors.green} />
+                          <Text style={styles.paidTagText}>Paid</Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={styles.stopMeta}>
                       {s.seats} seat{s.seats !== 1 ? 's' : ''}{s.meet ? ` · walks ~${fmtDistance(s.meet.distance)}` : ''}
                     </Text>
                   </View>
-                  <View style={[styles.payPill, paid ? styles.payOn : styles.payOff]}>
-                    <Text style={[styles.payText, { color: paid ? colors.green : colors.warning }]}>{paid ? 'Paid' : 'Unpaid'}</Text>
-                  </View>
-                  {s.rider?.phone && (
-                    <TouchableOpacity style={styles.callMini} onPress={() => Linking.openURL(`tel:${s.rider.phone}`)} activeOpacity={0.85}>
-                      <Ionicons name="call" size={15} color="#fff" />
-                    </TouchableOpacity>
+                  {paid && (
+                    <View style={styles.contactRow}>
+                      <TouchableOpacity style={styles.iconBtn} onPress={() => router.push(`/chat?bookingId=${s._id}&name=${encodeURIComponent(s.rider?.name || 'Rider')}`)} activeOpacity={0.85}>
+                        <Ionicons name="chatbubble-ellipses" size={15} color={colors.ink} />
+                      </TouchableOpacity>
+                      {s.rider?.phone && (
+                        <TouchableOpacity style={[styles.iconBtn, styles.callBtn]} onPress={() => Linking.openURL(`tel:${s.rider.phone}`)} activeOpacity={0.85}>
+                          <Ionicons name="call" size={15} color="#fff" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   )}
                 </View>
               );
@@ -164,13 +178,14 @@ const styles = StyleSheet.create({
   stopCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 12, marginBottom: 10, gap: 4, ...shadow.soft },
   orderNum: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
   orderNumText: { color: '#fff', fontFamily: fonts.extra, fontSize: 12 },
-  riderName: { fontSize: 15, fontFamily: fonts.bold, color: colors.ink },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  riderName: { fontSize: 15, fontFamily: fonts.bold, color: colors.ink, flexShrink: 1 },
+  paidTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#e6f4ee', borderRadius: radius.pill, paddingHorizontal: 7, paddingVertical: 2 },
+  paidTagText: { fontFamily: fonts.bold, fontSize: 10, color: colors.green },
   stopMeta: { fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted, marginTop: 3 },
-  payPill: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4, marginRight: 8 },
-  payOn: { backgroundColor: '#e6f4ee' },
-  payOff: { backgroundColor: '#fff4e5' },
-  payText: { fontFamily: fonts.bold, fontSize: 11 },
-  callMini: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
+  contactRow: { flexDirection: 'row', gap: 8 },
+  iconBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d6dbe3', alignItems: 'center', justifyContent: 'center' },
+  callBtn: { backgroundColor: colors.green, borderColor: colors.green },
   shareBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d6dbe3', borderRadius: radius.md, paddingVertical: 15, marginTop: 6 },
   shareText: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink },
 });

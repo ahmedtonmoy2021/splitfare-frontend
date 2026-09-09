@@ -8,7 +8,7 @@ import { SocketProvider } from '../context/SocketContext';
 import { STRIPE_PUBLISHABLE_KEY } from '../config';
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Manrope_400Regular,
     Manrope_500Medium,
     Manrope_600SemiBold,
@@ -19,7 +19,7 @@ export default function RootLayout() {
     IBMPlexMono_700Bold,
   });
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>

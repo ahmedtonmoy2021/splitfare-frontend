@@ -19,7 +19,7 @@ const PRICE_MAX = 50;
 const mapStyle = [
   { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
   { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#000000' }] },
   { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f5f5' }] },
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e5e5e5' }] },
@@ -256,12 +256,14 @@ export default function PostRide() {
               <Text style={styles.suggestText} numberOfLines={1}>{s.label}</Text>
             </TouchableOpacity>
           ))}
-          {origin && destination && suggestions.length === 0 && (
-            <TouchableOpacity style={styles.continueInline} onPress={() => setStep('details')}>
-              <Text style={styles.continueInlineText}>Continue with these locations →</Text>
-            </TouchableOpacity>
-          )}
         </ScrollView>
+
+        {origin && destination && (
+          <TouchableOpacity style={[styles.continueBtn, { marginBottom: insets.bottom + 16 }]} onPress={() => setStep('details')} activeOpacity={0.9}>
+            <Text style={styles.continueBtnText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={18} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -468,8 +470,8 @@ export default function PostRide() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={postRide} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Posting...' : 'Post Ride'}</Text>
+        <TouchableOpacity style={styles.button} onPress={postRide} disabled={loading} activeOpacity={0.9}>
+          <Text style={styles.buttonText}>{loading ? 'Publishing…' : 'Publish ride'}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -479,10 +481,10 @@ export default function PostRide() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#e8e8e8' },
 
-  searchScreen: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 20 },
+  searchScreen: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 20 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   backChevron: { fontSize: 32, color: '#010E39', marginRight: 12, marginTop: -4 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#010E39' },
+  headerTitle: { fontSize: 20, fontFamily: fonts.extra, color: colors.ink },
   searchInner: { flexDirection: 'row', alignItems: 'center' },
   connectorCol: { width: 16, alignItems: 'center', marginRight: 10, height: 96, justifyContent: 'center' },
   originDot: { width: 11, height: 11, borderRadius: 6, backgroundColor: '#010E39' },
@@ -491,20 +493,22 @@ const styles = StyleSheet.create({
   inputsCol: { flex: 1 },
   inputField: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f2f2f2', borderRadius: 8, paddingHorizontal: 12, height: 44, marginBottom: 8, borderWidth: 1.5, borderColor: 'transparent' },
   inputFieldActive: { borderColor: '#010E39' },
-  fieldInput: { flex: 1, fontSize: 15, color: '#222', paddingVertical: 0 },
+  fieldInput: { flex: 1, fontSize: 15, fontFamily: fonts.semi, color: colors.ink, paddingVertical: 0 },
   summaryField: { backgroundColor: '#f2f2f2', borderRadius: 8, paddingHorizontal: 12, height: 44, justifyContent: 'center', marginBottom: 8 },
-  summaryFieldText: { fontSize: 15, color: '#222' },
+  summaryFieldText: { fontSize: 15, fontFamily: fonts.semi, color: colors.ink },
   summaryLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
-  summaryLabel: { color: '#888', fontSize: 14 },
-  summaryValue: { color: '#010E39', fontSize: 15, fontWeight: '600' },
+  summaryLabel: { color: colors.textMuted, fontSize: 13, fontFamily: fonts.med },
+  summaryValue: { color: colors.ink, fontSize: 15, fontFamily: fonts.bold },
   gpsText: { fontSize: 18 },
   suggestList: { flex: 1, marginTop: 10 },
   suggestItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   suggestPin: { fontSize: 14, marginRight: 12 },
   suggestIconWrap: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#f2f2f2', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  suggestText: { fontSize: 15, color: '#333', flex: 1 },
+  suggestText: { fontSize: 15, color: colors.ink, fontFamily: fonts.med, flex: 1 },
   continueInline: { paddingVertical: 16, alignItems: 'center' },
   continueInlineText: { color: '#010E39', fontWeight: '700', fontSize: 15 },
+  continueBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.green, borderRadius: radius.md, paddingVertical: 16 },
+  continueBtnText: { color: '#fff', fontSize: 15, fontFamily: fonts.extra },
 
   summaryBar: {
     position: 'absolute', left: 16, right: 16, backgroundColor: '#fff', borderRadius: 14, padding: 14,
@@ -513,9 +517,9 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', alignItems: 'center', paddingRight: 48 },
   dot: { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
   dotSquare: { width: 10, height: 10, borderRadius: 2, backgroundColor: '#010E39', marginRight: 12 },
-  summaryText: { flex: 1, fontSize: 14, color: '#222' },
+  summaryText: { flex: 1, fontSize: 14, fontFamily: fonts.semi, color: colors.ink },
   summaryDivider: { height: 1, backgroundColor: '#eee', marginVertical: 8, marginLeft: 22 },
-  editText: { position: 'absolute', right: 14, top: 16, color: '#010E39', fontWeight: '700', fontSize: 13 },
+  editText: { position: 'absolute', right: 14, top: 16, color: colors.green, fontFamily: fonts.bold, fontSize: 13 },
   recenterBtn: {
     position: 'absolute', right: 16, backgroundColor: '#fff', width: 46, height: 46,
     borderRadius: 23, alignItems: 'center', justifyContent: 'center', elevation: 4,
@@ -527,21 +531,21 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20,
     elevation: 10, shadowColor: '#010E39', shadowOpacity: 0.15, shadowRadius: 10, shadowOffset: { width: 0, height: -3 },
   },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 12 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#d6dbe3', alignSelf: 'center', marginBottom: 12 },
   pickupPin: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#00000022', elevation: 3 },
   pickupInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#22a45d' },
   destPin: { width: 24, height: 24, borderRadius: 6, backgroundColor: '#010E39', alignItems: 'center', justifyContent: 'center', elevation: 3 },
   destInner: { width: 8, height: 8, borderRadius: 2, backgroundColor: '#fff' },
   tripInfo: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#f5f5f5', borderRadius: 10, paddingVertical: 10, marginBottom: 12 },
-  tripText: { fontSize: 15, fontWeight: '600', color: '#010E39' },
+  tripText: { fontSize: 14, fontFamily: fonts.bold, color: colors.ink },
   timeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#eee', marginBottom: 12 },
-  timeText: { fontSize: 15, color: '#010E39', fontWeight: '600' },
-  label: { fontWeight: '600', color: '#666', marginBottom: 6, fontSize: 13 },
+  timeText: { fontSize: 15, color: colors.ink, fontFamily: fonts.bold },
+  label: { fontFamily: fonts.semi, color: colors.textSecondary, marginBottom: 6, fontSize: 13 },
   row: { flexDirection: 'row', marginBottom: 12 },
   flex1: { flex: 1 },
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 14, fontSize: 15 },
-  button: { backgroundColor: '#010E39', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 4 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  button: { backgroundColor: colors.green, borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 4 },
+  buttonText: { color: '#fff', fontSize: 16, fontFamily: fonts.extra },
 
   d_screen: { flex: 1, backgroundColor: colors.bg },
   d_header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },

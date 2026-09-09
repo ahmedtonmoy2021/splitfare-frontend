@@ -103,10 +103,10 @@ export default function Chat() {
         </ScrollView>
       )}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow} keyboardShouldPersistTaps="handled">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll} contentContainerStyle={styles.chipsRow} keyboardShouldPersistTaps="handled">
         {QUICK.map((q) => (
           <TouchableOpacity key={q} style={styles.chip} onPress={() => sendText(q)} activeOpacity={0.85}>
-            <Text style={styles.chipText}>{q}</Text>
+            <Text style={styles.chipText} numberOfLines={1}>{q}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -142,8 +142,9 @@ const styles = StyleSheet.create({
   theirs: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: 16, borderBottomLeftRadius: 5 },
   msgText: { fontSize: 13.5, lineHeight: 19, color: colors.ink, fontFamily: fonts.med },
   time: { fontFamily: fonts.mono, fontSize: 10.5, color: '#9aa8bb', marginTop: 3, marginHorizontal: 4 },
-  chipsRow: { paddingHorizontal: 18, paddingVertical: 12, gap: 8 },
-  chip: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#dfe3ea', borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8 },
+  chipsScroll: { flexGrow: 0 },
+  chipsRow: { paddingHorizontal: 18, paddingVertical: 12, gap: 8, alignItems: 'center' },
+  chip: { flexShrink: 0, backgroundColor: '#fff', borderWidth: 1, borderColor: '#dfe3ea', borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8 },
   chipText: { fontFamily: fonts.semi, fontSize: 11.5, color: colors.textSecondary },
   inputBar: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 18, paddingTop: 14 },
   input: { flex: 1, backgroundColor: '#f2f4f8', borderWidth: 1, borderColor: '#e0e4ea', borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 12, fontSize: 13.5, fontFamily: fonts.med, color: colors.ink, maxHeight: 100 },
