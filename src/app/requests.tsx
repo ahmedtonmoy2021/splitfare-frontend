@@ -146,12 +146,19 @@ export default function Requests() {
                           <Text style={styles.declineText}>Decline</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.accept} onPress={() => respond(b._id, 'accept')} activeOpacity={0.9}>
-                          <Text style={styles.acceptText}>Accept · reveal contact</Text>
+                          <Text style={styles.acceptText}>Accept</Text>
                         </TouchableOpacity>
                       </View>
                     )}
 
-                    {accepted && (
+                    {b.status === 'accepted' && (
+                      <View style={styles.waitBox}>
+                        <Ionicons name="time-outline" size={15} color={colors.warning} />
+                        <Text style={styles.waitText}>Accepted — waiting for the rider's payment. Contact unlocks after payment.</Text>
+                      </View>
+                    )}
+
+                    {b.status === 'paid' && (
                       <View style={styles.actions}>
                         <TouchableOpacity style={styles.ghost} onPress={() => router.push(`/chat?bookingId=${b._id}&name=${encodeURIComponent(b.rider?.name || 'Rider')}`)} activeOpacity={0.85}>
                           <Ionicons name="chatbubble-ellipses-outline" size={15} color={colors.ink} />
@@ -240,6 +247,8 @@ const styles = StyleSheet.create({
   pillText: { fontFamily: fonts.monoBold, fontSize: 10 },
   meetBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f5f7fa', borderRadius: radius.sm, padding: 11 },
   meetText: { flex: 1, fontSize: 12.5, color: colors.textSecondary, fontFamily: fonts.med },
+  waitBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fdf1d8', borderRadius: radius.sm, padding: 11 },
+  waitText: { flex: 1, fontSize: 12, color: '#8a6100', fontFamily: fonts.semi, lineHeight: 16 },
   actions: { flexDirection: 'row', gap: 10 },
   decline: { flex: 1, borderWidth: 1, borderColor: '#cfd6e0', borderRadius: radius.sm, paddingVertical: 13, alignItems: 'center' },
   declineText: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.ink },
