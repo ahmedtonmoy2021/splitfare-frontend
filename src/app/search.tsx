@@ -12,6 +12,7 @@ import Avatar from '../components/Avatar';
 import ScreenHeader from '../components/ScreenHeader';
 import Card from '../components/Card';
 import RouteRows from '../components/RouteRows';
+import { colors, fonts, radius, shadow } from '../theme';
 
 export default function Search() {
   const { token } = useAuth();
@@ -212,75 +213,89 @@ export default function Search() {
     );
   }
 
-  return (
-    <View style={[styles.screen, { paddingTop: insets.top + 10 }]}>
-      <ScreenHeader title="Available rides" onBack={() => setStep('search')} />
+  const sorted = [...rides].sort((a, b) => a.pricePerSeat - b.pricePerSeat);
 
-      <View style={styles.routeChip}>
-        <Text style={styles.routeChipText} numberOfLines={1}>{fromText}  →  {toText}</Text>
+  return (
+    <View style={styles.r_screen}>
+      <View style={[styles.r_header, { paddingTop: insets.top + 6 }]}>
+        <TouchableOpacity style={styles.r_back} onPress={() => setStep('search')} activeOpacity={0.8}>
+          <Ionicons name="arrow-back" size={18} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.r_route} numberOfLines={1}>{fromText}  →  {toText}</Text>
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#010E39" style={{ marginTop: 40 }} />
-      ) : rides.length === 0 ? (
+        <ActivityIndicator size="large" color={colors.ink} style={{ marginTop: 40 }} />
+      ) : sorted.length === 0 ? (
         <View style={styles.empty}>
-          <Ionicons name="car-outline" size={48} color="#ccc" />
+          <Ionicons name="car-outline" size={48} color="#c3cbd8" />
           <Text style={styles.emptyText}>No rides found on this route yet.</Text>
           <Text style={styles.emptySub}>Try again later or adjust your locations.</Text>
         </View>
       ) : (
-        <ScrollView style={{ flex: 1, marginTop: 12 }}>
-          {rides.map((ride) => (
-            <Card key={ride._id}>
-              <View style={styles.rideTop}>
-                <Avatar user={ride.driver} size={42} />
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={styles.driverName}>{ride.driver?.name || 'Driver'}</Text>
-                  <Text style={styles.rideMeta}>
-                    {new Date(ride.departureTime).toLocaleDateString()} · {new Date(ride.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                </View>
-                <Text style={styles.price}>£{ride.pricePerSeat}</Text>
-              </View>
-
-              <RouteRows from={ride.origin?.address} to={ride.destination?.address} />
-
-              <View style={styles.rideBottom}>
-                {bookingStatus[ride._id] ? (
-                  <>
-                    <Text style={styles.seatsText}>{ride.seatsAvailable} seat{ride.seatsAvailable !== 1 ? 's' : ''} left</Text>
-                    <View style={[styles.statusPill, statusStyle(bookingStatus[ride._id]).pill]}>
-                      <Ionicons name={statusStyle(bookingStatus[ride._id]).icon} size={15} color={statusStyle(bookingStatus[ride._id]).fg} />
-                      <Text style={[styles.statusPillText, { color: statusStyle(bookingStatus[ride._id]).fg }]}>
-                        {statusStyle(bookingStatus[ride._id]).label}
-                      </Text>
-                    </View>
-                  </>
-                ) : (
-                  <>
+        <>
+          <Text style={styles.r_count}>{sorted.length} RIDE{sorted.length !== 1 ? 'S' : ''}  ·  CHEAPEST FIRST</Text>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 20, gap: 12 }} showsVerticalScrollIndicator={false}>
+            {sorted.map((ride, idx) => {
+              const booked = bookingStatus[ride._id];
+              const top = idx === 0;
+              const st = booked ? statusStyle(booked) : null;
+              return (
+                <View key={ride._id} style={[styles.r_card, top && styles.r_cardTop]}>
+                  <View style={styles.r_topRow}>
                     <View>
-                      <Text style={styles.seatsText}>{ride.seatsAvailable} seat{ride.seatsAvailable !== 1 ? 's' : ''} left</Text>
-                      <View style={styles.stepper}>
-                        <TouchableOpacity style={styles.stepBtn} onPress={() => changeSeats(ride, -1)}>
-                          <Ionicons name="remove" size={16} color="#010E39" />
+                      <Text style={styles.r_time}>{new Date(ride.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                      <Text style={styles.r_date}>{new Date(ride.departureTime).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={styles.r_price}>£{ride.pricePerSeat}</Text>
+                      <Text style={styles.r_perseat}>per seat</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.r_driverRow}>
+                    <Avatar user={ride.driver} size={34} />
+                    <View style={{ flex: 1, marginLeft: 11 }}>
+                      <Text style={styles.r_driver} numberOfLines={1}>{ride.driver?.name || 'Driver'}</Text>
+                      <Text style={styles.r_seats}>★ {ride.seatsAvailable} seat{ride.seatsAvailable !== 1 ? 's' : ''} left</Text>
+                    </View>
+                    {booked && st ? (
+                      <View style={[styles.statusPill, st.pill]}>
+                        <Ionicons name={st.icon} size={14} color={st.fg} />
+                        <Text style={[styles.statusPillText, { color: st.fg }]}>{st.label}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  {!booked && (
+                    <View style={styles.r_action}>
+                      <View style={styles.r_stepper}>
+                        <TouchableOpacity style={styles.r_stepBtn} onPress={() => changeSeats(ride, -1)}>
+                          <Ionicons name="remove" size={15} color={colors.ink} />
                         </TouchableOpacity>
-                        <Text style={styles.stepValue}>{getSeats(ride)}</Text>
-                        <TouchableOpacity style={styles.stepBtn} onPress={() => changeSeats(ride, 1)}>
-                          <Ionicons name="add" size={16} color="#010E39" />
+                        <Text style={styles.r_stepVal}>{getSeats(ride)}</Text>
+                        <TouchableOpacity style={styles.r_stepBtn} onPress={() => changeSeats(ride, 1)}>
+                          <Ionicons name="add" size={15} color={colors.ink} />
                         </TouchableOpacity>
                       </View>
+                      <TouchableOpacity style={[styles.r_req, top ? styles.r_reqOn : styles.r_reqOff]} onPress={() => requestBooking(ride)} activeOpacity={0.9}>
+                        <Text style={[styles.r_reqText, top ? { color: '#fff' } : { color: colors.ink }]}>Request · £{ride.pricePerSeat * getSeats(ride)}</Text>
+                      </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.requestBtn} onPress={() => requestBooking(ride)}>
-                      <Text style={styles.requestText}>Request · £{ride.pricePerSeat * getSeats(ride)}</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            </Card>
-          ))}
-          <View style={{ height: 30 }} />
-        </ScrollView>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
+        </>
       )}
+
+      <View style={[styles.r_footer, { paddingBottom: insets.bottom + 16 }]}>
+        <Text style={styles.r_footText}>Nothing fits?</Text>
+        <TouchableOpacity style={styles.r_postBtn} onPress={() => router.push('/post-ride')} activeOpacity={0.9}>
+          <Text style={styles.r_postText}>Post your own ride</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -326,4 +341,32 @@ const styles = StyleSheet.create({
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20 },
   statusPillText: { fontSize: 14, fontWeight: '700' },
   requestText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+
+  r_screen: { flex: 1, backgroundColor: colors.bg },
+  r_header: { backgroundColor: colors.ink, paddingHorizontal: 22, paddingBottom: 18, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  r_back: { width: 34, height: 34, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
+  r_route: { flex: 1, fontFamily: fonts.extra, fontSize: 18, color: '#fff', letterSpacing: -0.3 },
+  r_count: { fontFamily: fonts.mono, fontSize: 11.5, letterSpacing: 0.5, color: colors.textMuted, paddingHorizontal: 22, paddingTop: 16, paddingBottom: 4 },
+  r_card: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 14, ...shadow.soft },
+  r_cardTop: { borderWidth: 1.5, borderColor: colors.green, shadowColor: colors.green, shadowOpacity: 0.1 },
+  r_topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  r_time: { fontFamily: fonts.extra, fontSize: 20, color: colors.ink, letterSpacing: -0.4 },
+  r_date: { fontFamily: fonts.mono, fontSize: 11.5, color: colors.textMuted, marginTop: 2 },
+  r_price: { fontFamily: fonts.extra, fontSize: 20, color: colors.green },
+  r_perseat: { fontFamily: fonts.med, fontSize: 11.5, color: colors.textMuted, marginTop: 3 },
+  r_driverRow: { flexDirection: 'row', alignItems: 'center', paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderSoft },
+  r_driver: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.ink },
+  r_seats: { fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  r_action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  r_stepper: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  r_stepBtn: { width: 28, height: 28, borderRadius: 9, backgroundColor: '#eef1f6', alignItems: 'center', justifyContent: 'center' },
+  r_stepVal: { fontFamily: fonts.monoBold, fontSize: 15, color: colors.ink, minWidth: 16, textAlign: 'center' },
+  r_req: { borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 16 },
+  r_reqOn: { backgroundColor: colors.green },
+  r_reqOff: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#cfd6e0' },
+  r_reqText: { fontFamily: fonts.extra, fontSize: 12.5 },
+  r_footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 22, paddingTop: 14 },
+  r_footText: { fontFamily: fonts.semi, fontSize: 12, color: '#6b7a90' },
+  r_postBtn: { backgroundColor: '#e8f0fc', borderWidth: 1, borderColor: '#b8d0f4', borderRadius: radius.sm, paddingVertical: 11, paddingHorizontal: 16 },
+  r_postText: { fontFamily: fonts.bold, fontSize: 13, color: '#1f66cd' },
 });

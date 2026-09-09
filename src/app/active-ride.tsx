@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Share } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -10,6 +10,7 @@ import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 import Avatar from '../components/Avatar';
 import { nearestOnRoute, haversine, fmtDistance } from '../utils/geo';
+import { colors, fonts, radius, shadow } from '../theme';
 
 const mapStyle = [
   { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
@@ -55,7 +56,7 @@ export default function ActiveRide() {
         setTimeout(() => {
           const pts = withMeet.filter((s: any) => s.meet).map((s: any) => ({ latitude: s.meet.lat, longitude: s.meet.lng }));
           if (driverLoc) pts.push({ latitude: driverLoc.lat, longitude: driverLoc.lng });
-          if (pts.length) mapRef.current?.fitToCoordinates(pts, { edgePadding: { top: 100, right: 60, bottom: 320, left: 60 }, animated: true });
+          if (pts.length) mapRef.current?.fitToCoordinates(pts, { edgePadding: { top: 100, right: 60, bottom: 360, left: 60 }, animated: true });
         }, 500);
       } catch {} finally {
         setLoading(false);
@@ -64,6 +65,14 @@ export default function ActiveRide() {
   }, [rideId]);
 
   const routeLine = ride?.routeCoords?.map((c: number[]) => ({ latitude: c[1], longitude: c[0] })) || [];
+  const fromLabel = ride?.origin?.address || 'Pickup';
+  const toLabel = ride?.destination?.address || 'Destination';
+
+  async function shareTrip() {
+    try {
+      await Share.share({ message: `I'm on a SplitFare ride: ${fromLabel} → ${toLabel}.` });
+    } catch {}
+  }
 
   return (
     <View style={styles.container}>
@@ -74,54 +83,66 @@ export default function ActiveRide() {
         style={StyleSheet.absoluteFill}
         initialRegion={{ latitude: 51.4816, longitude: -3.1791, latitudeDelta: 0.3, longitudeDelta: 0.3 }}
         showsUserLocation>
-        {routeLine.length > 0 && <Polyline coordinates={routeLine} strokeWidth={4} strokeColor="#010E39" />}
+        {routeLine.length > 0 && <Polyline coordinates={routeLine} strokeWidth={4} strokeColor={colors.ink} />}
         {stops.map((s, i) =>
           s.meet ? (
             <Marker key={s._id} coordinate={{ latitude: s.meet.lat, longitude: s.meet.lng }} anchor={{ x: 0.5, y: 0.5 }}>
-              <View style={styles.numPin}>
-                <Text style={styles.numText}>{i + 1}</Text>
-              </View>
+              <View style={styles.numPin}><Text style={styles.numText}>{i + 1}</Text></View>
             </Marker>
           ) : null
         )}
       </MapView>
 
-      <TouchableOpacity style={[styles.backBtn, { top: insets.top + 8 }]} onPress={() => router.back()}>
-        <Text style={styles.backChevron}>‹</Text>
+      <TouchableOpacity style={[styles.backBtn, { top: insets.top + 8 }]} onPress={() => router.back()} activeOpacity={0.85}>
+        <Ionicons name="arrow-back" size={18} color={colors.ink} />
       </TouchableOpacity>
 
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + 20 }]}>
+      <View style={[styles.badge, { top: insets.top + 8 }]}>
+        <Text style={styles.badgeKicker}>ACTIVE RIDE</Text>
+        <Text style={styles.badgeRoute} numberOfLines={1}>{fromLabel} → {toLabel}</Text>
+      </View>
+
+      <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
         <View style={styles.handle} />
         <Text style={styles.title}>Pickup order</Text>
         <Text style={styles.sub}>Nearest to you first — riders wait on your route</Text>
 
         {loading ? (
-          <ActivityIndicator color="#010E39" style={{ marginTop: 20 }} />
+          <ActivityIndicator color={colors.ink} style={{ marginTop: 20 }} />
         ) : stops.length === 0 ? (
           <Text style={styles.empty}>No confirmed riders yet.</Text>
         ) : (
-          <ScrollView style={{ maxHeight: 280 }}>
-            {stops.map((s, i) => (
-              <View key={s._id} style={styles.stopRow}>
-                <View style={styles.orderNum}><Text style={styles.orderNumText}>{i + 1}</Text></View>
-                <Avatar user={s.rider} size={38} />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                  <Text style={styles.riderName}>{s.rider?.name || 'Rider'}</Text>
-                  <Text style={styles.stopMeta}>
-                    {s.seats} seat{s.seats !== 1 ? 's' : ''}
-                    {s.meet ? ` · rider walks ~${fmtDistance(s.meet.distance)}` : ''}
-                    {s.status === 'paid' ? ' · Paid' : ' · Unpaid'}
-                  </Text>
+          <ScrollView style={{ maxHeight: 280 }} showsVerticalScrollIndicator={false}>
+            {stops.map((s, i) => {
+              const paid = s.status === 'paid';
+              return (
+                <View key={s._id} style={styles.stopCard}>
+                  <View style={styles.orderNum}><Text style={styles.orderNumText}>{i + 1}</Text></View>
+                  <Avatar user={s.rider} size={40} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.riderName} numberOfLines={1}>{s.rider?.name || 'Rider'}</Text>
+                    <Text style={styles.stopMeta}>
+                      {s.seats} seat{s.seats !== 1 ? 's' : ''}{s.meet ? ` · walks ~${fmtDistance(s.meet.distance)}` : ''}
+                    </Text>
+                  </View>
+                  <View style={[styles.payPill, paid ? styles.payOn : styles.payOff]}>
+                    <Text style={[styles.payText, { color: paid ? colors.green : colors.warning }]}>{paid ? 'Paid' : 'Unpaid'}</Text>
+                  </View>
+                  {s.rider?.phone && (
+                    <TouchableOpacity style={styles.callMini} onPress={() => Linking.openURL(`tel:${s.rider.phone}`)} activeOpacity={0.85}>
+                      <Ionicons name="call" size={15} color="#fff" />
+                    </TouchableOpacity>
+                  )}
                 </View>
-                {s.rider?.phone && (
-                  <TouchableOpacity style={styles.callMini} onPress={() => Linking.openURL(`tel:${s.rider.phone}`)}>
-                    <Ionicons name="call" size={16} color="#fff" />
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
         )}
+
+        <TouchableOpacity style={styles.shareBtn} onPress={shareTrip} activeOpacity={0.9}>
+          <Ionicons name="share-outline" size={17} color={colors.ink} />
+          <Text style={styles.shareText}>Share trip</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -129,19 +150,27 @@ export default function ActiveRide() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#e8e8e8' },
-  backBtn: { position: 'absolute', left: 16, backgroundColor: '#fff', width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', elevation: 4 },
-  backChevron: { fontSize: 30, color: '#010E39', marginTop: -3 },
-  numPin: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#1a56c4', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  numText: { color: '#fff', fontWeight: '800', fontSize: 13 },
-  sheet: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20 },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 12 },
-  title: { fontSize: 20, fontWeight: '700', color: '#010E39' },
-  sub: { fontSize: 13, color: '#888', marginTop: 2, marginBottom: 12 },
-  empty: { color: '#888', textAlign: 'center', marginTop: 16 },
-  stopRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f2f2f2' },
-  orderNum: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#1a56c4', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  orderNumText: { color: '#fff', fontWeight: '800', fontSize: 12 },
-  riderName: { fontSize: 15, fontWeight: '700', color: '#010E39' },
-  stopMeta: { fontSize: 12, color: '#888', marginTop: 2 },
-  callMini: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1a7f3c', alignItems: 'center', justifyContent: 'center' },
+  backBtn: { position: 'absolute', left: 16, backgroundColor: '#fff', width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#d6dbe3', ...shadow.soft },
+  badge: { position: 'absolute', left: 66, right: 16, backgroundColor: colors.ink, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10, ...shadow.card },
+  badgeKicker: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.2, color: '#6ee0ae' },
+  badgeRoute: { fontFamily: fonts.bold, fontSize: 14, color: '#fff', marginTop: 3 },
+  numPin: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
+  numText: { color: '#fff', fontFamily: fonts.extra, fontSize: 13 },
+  sheet: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.bg, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 22, paddingTop: 14 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#d6dbe3', alignSelf: 'center', marginBottom: 14 },
+  title: { fontSize: 20, fontFamily: fonts.extra, color: colors.ink, letterSpacing: -0.4 },
+  sub: { fontSize: 12.5, color: colors.textSecondary, fontFamily: fonts.med, marginTop: 3, marginBottom: 14 },
+  empty: { color: colors.textSecondary, textAlign: 'center', marginTop: 16, fontFamily: fonts.med },
+  stopCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 12, marginBottom: 10, gap: 4, ...shadow.soft },
+  orderNum: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  orderNumText: { color: '#fff', fontFamily: fonts.extra, fontSize: 12 },
+  riderName: { fontSize: 15, fontFamily: fonts.bold, color: colors.ink },
+  stopMeta: { fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted, marginTop: 3 },
+  payPill: { borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4, marginRight: 8 },
+  payOn: { backgroundColor: '#e6f4ee' },
+  payOff: { backgroundColor: '#fff4e5' },
+  payText: { fontFamily: fonts.bold, fontSize: 11 },
+  callMini: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
+  shareBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d6dbe3', borderRadius: radius.md, paddingVertical: 15, marginTop: 6 },
+  shareText: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink },
 });

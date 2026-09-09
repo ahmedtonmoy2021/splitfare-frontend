@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +11,10 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { colors, fonts, radius, shadow } from '../theme';
+
+const PRICE_MIN = 1;
+const PRICE_MAX = 50;
 
 const mapStyle = [
   { elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
@@ -262,57 +267,124 @@ export default function PostRide() {
   }
 
   if (step === 'details') {
+    const seatsNum = Number(seats) || 1;
+    const priceNum = Number(price) || PRICE_MIN;
+    const total = seatsNum * priceNum;
+    const dateStr = date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return (
-      <View style={[styles.searchScreen, { paddingTop: insets.top + 10 }]}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => setStep('search')}>
-            <Text style={styles.backChevron}>‹</Text>
+      <View style={[styles.d_screen, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.d_header}>
+          <TouchableOpacity style={styles.d_back} onPress={() => setStep('search')} activeOpacity={0.8}>
+            <Ionicons name="arrow-back" size={18} color={colors.ink} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Ride details</Text>
+          <Text style={styles.d_title}>Post a ride</Text>
         </View>
 
-        <View style={styles.searchInner}>
-          <View style={styles.connectorCol}>
-            <View style={styles.originDot} />
-            <View style={styles.connectorLine} />
-            <View style={styles.destSquare} />
-          </View>
-          <View style={styles.inputsCol}>
-            <View style={styles.summaryField}><Text numberOfLines={1} style={styles.summaryFieldText}>{fromText}</Text></View>
-            <View style={styles.summaryField}><Text numberOfLines={1} style={styles.summaryFieldText}>{toText}</Text></View>
-          </View>
+        <View style={styles.d_progress}>
+          <View style={[styles.d_seg, styles.d_segOn]} />
+          <View style={[styles.d_seg, styles.d_segOn]} />
+          <View style={styles.d_seg} />
+          <Text style={styles.d_step}>2/3</Text>
         </View>
 
-        {distanceKm && (
-          <View style={styles.tripInfo}>
-            <Text style={styles.tripText}>🚗 {distanceKm} km</Text>
-            <Text style={styles.tripText}>⏱ {durationMin}</Text>
-          </View>
-        )}
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 20, gap: 12 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity style={styles.d_map} activeOpacity={0.9} onPress={() => setStep('map')}>
+            {origin && destination && (
+              <MapView
+                pointerEvents="none"
+                provider={PROVIDER_GOOGLE}
+                customMapStyle={mapStyle}
+                style={StyleSheet.absoluteFill}
+                initialRegion={{
+                  latitude: (origin.latitude + destination.latitude) / 2,
+                  longitude: (origin.longitude + destination.longitude) / 2,
+                  latitudeDelta: Math.abs(origin.latitude - destination.latitude) * 1.8 + 0.05,
+                  longitudeDelta: Math.abs(origin.longitude - destination.longitude) * 1.8 + 0.05,
+                }}>
+                {routeCoords.length > 0 && <Polyline coordinates={routeCoords} strokeWidth={3} strokeColor={colors.ink} />}
+              </MapView>
+            )}
+            <View style={styles.d_mapHint}>
+              <Text style={styles.d_mapHintText}>map · tap to adjust route{distanceKm ? `  ·  ${distanceKm} km` : ''}</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.timeRow} onPress={() => setShowDate(true)}>
-          <Text style={styles.label}>Departure</Text>
-          <Text style={styles.timeText}>
-            {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.d_card}>
+            <View style={styles.d_rtRow}>
+              <View style={styles.d_dotBlue} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.d_kicker}>FROM</Text>
+                <Text style={styles.d_place} numberOfLines={1}>{fromText}</Text>
+              </View>
+            </View>
+            <View style={styles.d_rtDivider} />
+            <View style={styles.d_rtRow}>
+              <View style={styles.d_dotGreen} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.d_kicker}>TO</Text>
+                <Text style={styles.d_place} numberOfLines={1}>{toText}</Text>
+              </View>
+            </View>
+          </View>
 
-        <View style={styles.row}>
-          <View style={styles.flex1}>
-            <Text style={styles.label}>Seats</Text>
-            <TextInput style={styles.input} keyboardType="number-pad" value={seats} onChangeText={setSeats} />
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity style={styles.d_miniCard} onPress={() => setShowDate(true)} activeOpacity={0.85}>
+              <Text style={styles.d_kicker}>DATE</Text>
+              <Text style={styles.d_miniVal}>{dateStr}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.d_miniCard} onPress={() => setShowTime(true)} activeOpacity={0.85}>
+              <Text style={styles.d_kicker}>DEPARTS</Text>
+              <Text style={styles.d_miniVal}>{timeStr}</Text>
+            </TouchableOpacity>
           </View>
-          <View style={{ width: 12 }} />
-          <View style={styles.flex1}>
-            <Text style={styles.label}>Price/seat (£)</Text>
-            <TextInput style={styles.input} keyboardType="number-pad" value={price} onChangeText={setPrice} />
+
+          <View style={styles.d_card}>
+            <View style={styles.d_seatRow}>
+              <Text style={styles.d_cardTitle}>Seats offered</Text>
+              <View style={styles.d_stepper}>
+                <TouchableOpacity style={styles.d_stepMinus} onPress={() => setSeats(String(Math.max(1, seatsNum - 1)))}>
+                  <Ionicons name="remove" size={16} color={colors.ink} />
+                </TouchableOpacity>
+                <Text style={styles.d_stepVal}>{seatsNum}</Text>
+                <TouchableOpacity style={styles.d_stepPlus} onPress={() => setSeats(String(Math.min(8, seatsNum + 1)))}>
+                  <Ionicons name="add" size={16} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.d_hr} />
+            <View style={styles.d_priceRow}>
+              <Text style={styles.d_cardTitle}>Price per seat</Text>
+              <Text style={styles.d_price}>£{priceNum}</Text>
+            </View>
+            <Slider
+              style={{ marginTop: 4 }}
+              minimumValue={PRICE_MIN}
+              maximumValue={PRICE_MAX}
+              step={1}
+              value={priceNum}
+              minimumTrackTintColor={colors.green}
+              maximumTrackTintColor="#e4e7ed"
+              thumbTintColor={colors.green}
+              onValueChange={(v) => setPrice(String(Math.round(v)))}
+            />
+            <View style={styles.d_scaleRow}>
+              <Text style={styles.d_scale}>£{PRICE_MIN}</Text>
+              <Text style={styles.d_scale}>£{PRICE_MAX}</Text>
+            </View>
           </View>
-        </View>
+
+          <View style={styles.d_note}>
+            <Text style={styles.d_noteText}>
+              With {seatsNum} seat{seatsNum !== 1 ? 's' : ''} at £{priceNum} each, you collect £{total} in total.
+            </Text>
+          </View>
+        </ScrollView>
 
         {showDate && (
           <DateTimePicker value={date} mode="date" onChange={(e, sel) => {
             setShowDate(false);
-            if (sel) { const d = new Date(date); d.setFullYear(sel.getFullYear(), sel.getMonth(), sel.getDate()); setDate(d); setShowTime(true); }
+            if (sel) { const d = new Date(date); d.setFullYear(sel.getFullYear(), sel.getMonth(), sel.getDate()); setDate(d); }
           }} />
         )}
         {showTime && (
@@ -322,10 +394,14 @@ export default function PostRide() {
           }} />
         )}
 
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity style={[styles.button, { marginBottom: insets.bottom + 16 }]} onPress={() => setStep('map')}>
-          <Text style={styles.buttonText}>Preview on map</Text>
-        </TouchableOpacity>
+        <View style={[styles.d_footer, { paddingBottom: insets.bottom + 20 }]}>
+          <TouchableOpacity style={styles.d_backBtn} onPress={() => setStep('search')} activeOpacity={0.85}>
+            <Text style={styles.d_backBtnText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.d_next} onPress={() => setStep('map')} activeOpacity={0.9}>
+            <Text style={styles.d_nextText}>Review &amp; publish</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -466,4 +542,43 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 14, fontSize: 15 },
   button: { backgroundColor: '#010E39', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 4 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  d_screen: { flex: 1, backgroundColor: colors.bg },
+  d_header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 22, paddingTop: 8, paddingBottom: 12 },
+  d_back: { width: 34, height: 34, borderRadius: 11, borderWidth: 1, borderColor: '#d6dbe3', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  d_title: { fontSize: 19, fontFamily: fonts.extra, color: colors.ink, letterSpacing: -0.3 },
+  d_progress: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 22, marginBottom: 16 },
+  d_seg: { flex: 1, height: 3, borderRadius: 2, backgroundColor: '#dcdfe6' },
+  d_segOn: { backgroundColor: colors.green },
+  d_step: { fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted, marginLeft: 6 },
+  d_map: { height: 92, borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: '#dfe3ea', backgroundColor: '#eef2f7', alignItems: 'center', justifyContent: 'center' },
+  d_mapHint: { position: 'absolute', bottom: 8, backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  d_mapHintText: { fontFamily: fonts.mono, fontSize: 10.5, color: colors.textMuted },
+  d_card: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, padding: 16, ...shadow.card },
+  d_rtRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  d_dotBlue: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.blue },
+  d_dotGreen: { width: 9, height: 9, borderRadius: 2, backgroundColor: colors.green },
+  d_rtDivider: { height: 1, backgroundColor: colors.borderSoft, marginLeft: 21, marginVertical: 12 },
+  d_kicker: { fontFamily: fonts.mono, fontSize: 10.5, letterSpacing: 1.2, color: colors.textMuted },
+  d_place: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, marginTop: 3 },
+  d_miniCard: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 14 },
+  d_miniVal: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, marginTop: 5 },
+  d_cardTitle: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink },
+  d_seatRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  d_stepper: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  d_stepMinus: { width: 30, height: 30, borderRadius: 9, backgroundColor: '#eef1f6', alignItems: 'center', justifyContent: 'center' },
+  d_stepPlus: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
+  d_stepVal: { fontFamily: fonts.monoBold, fontSize: 18, color: colors.ink, minWidth: 18, textAlign: 'center' },
+  d_hr: { height: 1, backgroundColor: colors.borderSoft, marginVertical: 13 },
+  d_priceRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  d_price: { fontFamily: fonts.extra, fontSize: 20, color: colors.green },
+  d_scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
+  d_scale: { fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted },
+  d_note: { backgroundColor: '#e6f4ee', borderWidth: 1, borderColor: '#b6ded0', borderRadius: radius.md, padding: 13 },
+  d_noteText: { fontFamily: fonts.med, fontSize: 12, lineHeight: 17, color: '#0d6b4c' },
+  d_footer: { flexDirection: 'row', gap: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: 22, paddingTop: 14 },
+  d_backBtn: { borderWidth: 1, borderColor: '#cfd6e0', borderRadius: radius.md, paddingVertical: 16, paddingHorizontal: 22, alignItems: 'center', justifyContent: 'center' },
+  d_backBtnText: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink },
+  d_next: { flex: 1, backgroundColor: colors.green, borderRadius: radius.md, paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
+  d_nextText: { fontFamily: fonts.extra, fontSize: 15, color: '#fff' },
 });

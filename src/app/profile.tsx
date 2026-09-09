@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,11 +9,10 @@ import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Avatar from '../components/Avatar';
-import ScreenHeader from '../components/ScreenHeader';
-import PrimaryButton from '../components/PrimaryButton';
+import { colors, fonts, radius, shadow } from '../theme';
 
 export default function Profile() {
-  const { token, user, mode, setMode, updateUser } = useAuth();
+  const { token, user, mode, setMode, updateUser, logout } = useAuth();
   const toast = useToast();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -63,98 +62,130 @@ export default function Profile() {
   const previewUser = { avatar, gender, name };
 
   return (
-    <ScrollView style={[styles.screen, { paddingTop: insets.top + 10 }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader title="Profile" />
-
-      <View style={styles.avatarWrap}>
-        <Avatar user={previewUser} size={92} />
-        <TouchableOpacity style={styles.cameraBtn} onPress={pickPhoto}>
-          <Ionicons name="camera" size={16} color="#fff" />
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.email}>{user?.email}</Text>
-
-      <Text style={styles.label}>Mode</Text>
-      <View style={styles.modeToggle}>
-        <TouchableOpacity style={[styles.modeBtn, !isDriver && styles.modeActive]} onPress={() => setMode('rider')}>
-          <Ionicons name="person-outline" size={17} color={!isDriver ? '#fff' : '#666'} />
-          <Text style={!isDriver ? styles.modeTextActive : styles.modeText}>Rider</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.modeBtn, isDriver && styles.modeActive]} onPress={() => setMode('driver')}>
-          <Ionicons name="car-sport-outline" size={18} color={isDriver ? '#fff' : '#666'} />
-          <Text style={isDriver ? styles.modeTextActive : styles.modeText}>Driver</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.hint}>Rider mode lets you find and book rides. Driver mode lets you post rides and manage requests.</Text>
-
-      <Text style={styles.label}>Name</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Your name" />
-
-      <Text style={styles.label}>Gender</Text>
-      <TouchableOpacity style={styles.dropdown} onPress={() => setGenderOpen(!genderOpen)}>
-        <View style={styles.ddLeft}>
-          <Ionicons name={gender === 'female' ? 'woman' : gender === 'male' ? 'man' : 'person-outline'} size={18} color="#010E39" />
-          <Text style={[styles.ddText, !gender && { color: '#999' }]}>
-            {gender === 'male' ? 'Male' : gender === 'female' ? 'Female' : 'Select gender'}
-          </Text>
-        </View>
-        <Ionicons name={genderOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#888" />
-      </TouchableOpacity>
-      {genderOpen && (
-        <View style={styles.ddMenu}>
-          <TouchableOpacity style={styles.ddItem} onPress={() => { setGender('male'); setGenderOpen(false); }}>
-            <Ionicons name="man" size={18} color="#010E39" />
-            <Text style={styles.ddItemText}>Male</Text>
-            {gender === 'male' && <Ionicons name="checkmark" size={18} color="#010E39" style={{ marginLeft: 'auto' }} />}
+    <View style={styles.screen}>
+      <View pointerEvents="none" style={styles.glow} />
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 30, paddingHorizontal: 22 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={styles.topRow}>
+          <TouchableOpacity style={styles.back} onPress={() => router.back()} activeOpacity={0.8}>
+            <Ionicons name="arrow-back" size={18} color={colors.ink} />
           </TouchableOpacity>
-          <View style={styles.ddDivider} />
-          <TouchableOpacity style={styles.ddItem} onPress={() => { setGender('female'); setGenderOpen(false); }}>
-            <Ionicons name="woman" size={18} color="#010E39" />
-            <Text style={styles.ddItemText}>Female</Text>
-            {gender === 'female' && <Ionicons name="checkmark" size={18} color="#010E39" style={{ marginLeft: 'auto' }} />}
+          <Text style={styles.title}>Profile</Text>
+        </View>
+
+        <View style={styles.head}>
+          <View>
+            <Avatar user={previewUser} size={66} />
+            <TouchableOpacity style={styles.camera} onPress={pickPhoto} activeOpacity={0.85}>
+              <Ionicons name="camera" size={14} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <View style={{ flex: 1, marginLeft: 15 }}>
+            <Text style={styles.name} numberOfLines={1}>{name || 'Your name'}</Text>
+            <Text style={styles.email} numberOfLines={1}>{user?.email}</Text>
+          </View>
+        </View>
+
+        <View style={styles.toggle}>
+          <TouchableOpacity style={[styles.toggleBtn, !isDriver && styles.toggleOn]} onPress={() => setMode('rider')} activeOpacity={0.9}>
+            <Ionicons name="person-outline" size={16} color={!isDriver ? '#fff' : colors.textSecondary} />
+            <Text style={!isDriver ? styles.toggleTextOn : styles.toggleText}>Rider</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.toggleBtn, isDriver && styles.toggleOn]} onPress={() => setMode('driver')} activeOpacity={0.9}>
+            <Ionicons name="car-sport-outline" size={17} color={isDriver ? '#fff' : colors.textSecondary} />
+            <Text style={isDriver ? styles.toggleTextOn : styles.toggleText}>Driver</Text>
           </TouchableOpacity>
         </View>
-      )}
 
-      <Text style={styles.label}>Phone number</Text>
-      <TextInput
-        style={styles.input}
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="e.g. 07123456789"
-        keyboardType="phone-pad"
-      />
-      <Text style={styles.hint}>Your phone is needed to post or book rides. It is only shared after a booking is accepted.</Text>
+        <Text style={styles.section}>ACCOUNT</Text>
+        <View style={styles.card}>
+          <View style={styles.rowStatic}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Email</Text>
+              <Text style={styles.rowValue} numberOfLines={1}>{user?.email}</Text>
+            </View>
+            <View style={styles.verified}><Text style={styles.verifiedText}>VERIFIED</Text></View>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.rowField}>
+            <Text style={styles.rowLabel}>Name</Text>
+            <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor="#aab4c2" />
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.rowField}>
+            <Text style={styles.rowLabel}>Phone number</Text>
+            <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="e.g. 07123456789" placeholderTextColor="#aab4c2" keyboardType="phone-pad" />
+          </View>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.rowStatic} onPress={() => setGenderOpen(!genderOpen)} activeOpacity={0.8}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Gender</Text>
+              <Text style={[styles.rowValue, !gender && { color: '#aab4c2' }]}>
+                {gender === 'male' ? 'Male' : gender === 'female' ? 'Female' : 'Select gender'}
+              </Text>
+            </View>
+            <Ionicons name={genderOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#b3bdca" />
+          </TouchableOpacity>
+          {genderOpen && (
+            <View style={styles.ddMenu}>
+              <TouchableOpacity style={styles.ddItem} onPress={() => { setGender('male'); setGenderOpen(false); }}>
+                <Ionicons name="man" size={18} color={colors.ink} />
+                <Text style={styles.ddItemText}>Male</Text>
+                {gender === 'male' && <Ionicons name="checkmark" size={18} color={colors.green} style={{ marginLeft: 'auto' }} />}
+              </TouchableOpacity>
+              <View style={styles.divider} />
+              <TouchableOpacity style={styles.ddItem} onPress={() => { setGender('female'); setGenderOpen(false); }}>
+                <Ionicons name="woman" size={18} color={colors.ink} />
+                <Text style={styles.ddItemText}>Female</Text>
+                {gender === 'female' && <Ionicons name="checkmark" size={18} color={colors.green} style={{ marginLeft: 'auto' }} />}
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+        <Text style={styles.hint}>Your phone is only shared after a booking is accepted.</Text>
 
-      <PrimaryButton title="Save" onPress={save} loading={loading} style={{ marginTop: 24 }} />
-      <View style={{ height: insets.bottom + 48 }} />
-    </ScrollView>
+        <TouchableOpacity style={styles.save} onPress={save} disabled={loading} activeOpacity={0.9}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save changes</Text>}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.logout} onPress={async () => { await logout(); router.replace('/'); }} activeOpacity={0.9}>
+          <Text style={styles.logoutText}>Log out</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#EAF2FB', paddingHorizontal: 20 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  backChevron: { fontSize: 32, color: '#010E39', marginRight: 12, marginTop: -4 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#010E39' },
-  avatarWrap: { alignSelf: 'center', marginTop: 10 },
-  cameraBtn: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#010E39', width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  email: { textAlign: 'center', color: '#888', marginTop: 12, marginBottom: 20, fontSize: 15 },
-  label: { fontWeight: '600', color: '#666', marginBottom: 6, fontSize: 13, marginTop: 12 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 14, fontSize: 15 },
-  dropdown: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 14 },
-  ddLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  ddText: { fontSize: 15, fontWeight: '600', color: '#010E39' },
-  ddMenu: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, marginTop: 6, backgroundColor: '#fff', overflow: 'hidden' },
-  ddItem: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },
-  ddItemText: { fontSize: 15, fontWeight: '600', color: '#010E39' },
-  ddDivider: { height: 1, backgroundColor: '#f0f0f0' },
-  hint: { color: '#999', fontSize: 12, marginTop: 8 },
-  modeToggle: { flexDirection: 'row', backgroundColor: '#f2f2f2', borderRadius: 12, padding: 4 },
-  modeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 10 },
-  modeActive: { backgroundColor: '#010E39' },
-  modeText: { fontSize: 15, fontWeight: '700', color: '#666' },
-  modeTextActive: { fontSize: 15, fontWeight: '700', color: '#fff' },
-  button: { backgroundColor: '#010E39', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 24 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  screen: { flex: 1, backgroundColor: colors.bg },
+  glow: { position: 'absolute', top: -120, left: -100, width: 320, height: 320, borderRadius: 160, backgroundColor: 'rgba(43,196,138,0.12)' },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 10 },
+  back: { width: 34, height: 34, borderRadius: 11, borderWidth: 1, borderColor: '#d6dbe3', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: 19, fontFamily: fonts.extra, color: colors.ink, letterSpacing: -0.3 },
+  head: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
+  camera: { position: 'absolute', bottom: -2, right: -2, backgroundColor: colors.ink, width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.bg },
+  name: { fontSize: 21, fontFamily: fonts.extra, color: colors.ink, letterSpacing: -0.3 },
+  email: { fontFamily: fonts.mono, fontSize: 11.5, color: colors.textMuted, marginTop: 4 },
+  toggle: { flexDirection: 'row', backgroundColor: colors.surfaceAlt, borderWidth: 1, borderColor: '#dcdad4', borderRadius: radius.md, padding: 4, marginTop: 22 },
+  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: radius.sm },
+  toggleOn: { backgroundColor: colors.ink },
+  toggleText: { fontSize: 14, fontFamily: fonts.bold, color: colors.textSecondary },
+  toggleTextOn: { fontSize: 14, fontFamily: fonts.bold, color: '#fff' },
+  section: { fontFamily: fonts.mono, fontSize: 10.5, letterSpacing: 1.2, color: colors.textMuted, marginTop: 22, marginBottom: 10 },
+  card: { backgroundColor: '#fff', borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, overflow: 'hidden', ...shadow.soft },
+  rowStatic: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
+  rowField: { paddingHorizontal: 16, paddingVertical: 12 },
+  rowLabel: { fontFamily: fonts.med, fontSize: 11, color: colors.textMuted },
+  rowValue: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.ink, marginTop: 3 },
+  input: { fontFamily: fonts.bold, fontSize: 15, color: colors.ink, padding: 0, marginTop: 4 },
+  divider: { height: 1, backgroundColor: colors.borderSoft },
+  verified: { backgroundColor: '#e6f4ee', borderRadius: 8, paddingHorizontal: 9, paddingVertical: 5 },
+  verifiedText: { fontFamily: fonts.mono, fontSize: 10, color: '#0d6b4c' },
+  ddMenu: { backgroundColor: '#fbfbfa' },
+  ddItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 14 },
+  ddItemText: { fontSize: 14, fontFamily: fonts.semi, color: colors.ink },
+  hint: { fontFamily: fonts.med, fontSize: 12, color: colors.textMuted, marginTop: 10, marginHorizontal: 4 },
+  save: { backgroundColor: colors.green, borderRadius: radius.md, paddingVertical: 16, alignItems: 'center', marginTop: 22 },
+  saveText: { color: '#fff', fontSize: 15, fontFamily: fonts.extra },
+  logout: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#f0b8b8', borderRadius: radius.md, paddingVertical: 15, alignItems: 'center', marginTop: 12 },
+  logoutText: { color: '#b03434', fontSize: 14, fontFamily: fonts.bold },
 });
