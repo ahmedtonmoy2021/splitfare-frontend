@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.splitfare.app",
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#010E39",
         "foregroundImage": "./assets/images/android-icon-foreground.png"

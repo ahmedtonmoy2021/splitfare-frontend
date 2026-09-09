@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Animated, ScrollView, Pressable } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Animated, ScrollView, Pressable, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useRootNavigationState } from 'expo-router';
@@ -101,7 +101,7 @@ export default function Login() {
     return (
       <View style={styles.otpScreen}>
         <View pointerEvents="none" style={styles.glowGreen} />
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingTop: insets.top + 14, paddingHorizontal: 26, paddingBottom: insets.bottom + 30 }} showsVerticalScrollIndicator={false}>
             <TouchableOpacity style={styles.backBtn} onPress={() => { setStep('email'); setOtp(''); }} activeOpacity={0.8}>
               <Ionicons name="arrow-back" size={18} color={DARK} />
@@ -154,12 +154,9 @@ export default function Login() {
   return (
     <View style={styles.container}>
       <View pointerEvents="none" style={styles.glow} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Animated.View style={[styles.hero, { paddingTop: insets.top + 28, opacity: heroOpacity }]}>
-          <View style={styles.mark}>
-            <View style={[styles.bar, { backgroundColor: BLUE }]} />
-            <View style={[styles.bar, { backgroundColor: GREEN }]} />
-          </View>
+          <Image source={require('../../assets/images/logo-icon.png')} style={styles.logo} resizeMode="contain" />
           <Text style={styles.headline}>
             Going the{'\n'}same way?{'\n'}
             <Text style={{ color: GREEN }}>Split it.</Text>
@@ -170,8 +167,7 @@ export default function Login() {
         </Animated.View>
 
         <Animated.View style={[styles.sheet, { paddingBottom: insets.bottom + 24, opacity: sheetOpacity, transform: [{ translateY: sheetTranslate }] }]}>
-          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <View style={styles.grabber} />
+          <View style={styles.grabber} />
             <Text style={styles.sheetTitle}>Sign in with your email</Text>
 
             <View style={styles.inputCard}>
@@ -182,6 +178,8 @@ export default function Login() {
                 placeholderTextColor="#aab4c2"
                 autoCapitalize="none"
                 keyboardType="email-address"
+                returnKeyType="go"
+                onSubmitEditing={sendOtp}
                 value={email}
                 onChangeText={setEmail}
               />
@@ -203,8 +201,7 @@ export default function Login() {
             </TouchableOpacity>
 
             <Text style={styles.footNote}>No password. The code expires in 5 minutes.</Text>
-          </ScrollView>
-        </Animated.View>
+          </Animated.View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -213,12 +210,11 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: NAVY },
   glow: { position: 'absolute', top: -90, right: -120, width: 320, height: 320, borderRadius: 160, backgroundColor: 'rgba(46,123,232,0.18)' },
-  hero: { paddingHorizontal: 26, paddingBottom: 36 },
-  mark: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#0f2440', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  bar: { width: 7, height: 24, borderRadius: 4, transform: [{ skewX: '-18deg' }] },
+  hero: { flex: 1, paddingHorizontal: 26, paddingBottom: 36, justifyContent: 'flex-end' },
+  logo: { width: 56, height: 56 },
   headline: { color: '#fff', fontSize: 40, lineHeight: 42, fontFamily: F.extra, letterSpacing: -1.2, marginTop: 32 },
   subhead: { color: 'rgba(255,255,255,0.55)', fontSize: 14.5, lineHeight: 22, fontFamily: F.med, marginTop: 14, maxWidth: 290 },
-  sheet: { marginTop: 'auto', backgroundColor: SHEET, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 26, paddingTop: 18, maxHeight: '62%' },
+  sheet: { marginTop: 'auto', backgroundColor: SHEET, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 26, paddingTop: 18 },
   grabber: { width: 44, height: 4, borderRadius: 2, backgroundColor: '#d6dbe3', alignSelf: 'center', marginBottom: 14 },
   sheetTitle: { fontSize: 20, fontFamily: F.extra, color: DARK, letterSpacing: -0.4 },
   inputCard: { borderWidth: 1.5, borderColor: '#cfd6e0', borderRadius: 14, backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, marginTop: 16 },
