@@ -147,7 +147,7 @@ export default function MyTrips() {
                   </TouchableOpacity>
                 )}
 
-                {(b.status === 'accepted' || b.status === 'paid') && (
+                {b.status === 'paid' && (
                   <View style={styles.actionRow}>
                     {b.ride?.driver?.phone && (
                       <TouchableOpacity style={styles.ghostBtn} onPress={() => Linking.openURL(`tel:${b.ride.driver.phone}`)} activeOpacity={0.85}>

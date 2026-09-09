@@ -199,7 +199,7 @@ export default function Requests() {
                       </TouchableOpacity>
                     )}
 
-                    {(b.status === 'accepted' || b.status === 'paid') && (
+                    {b.status === 'paid' && (
                       <View style={styles.actions}>
                         <TouchableOpacity style={styles.ghost} onPress={() => router.push(`/chat?bookingId=${b._id}&name=${encodeURIComponent(b.ride?.driver?.name || 'Driver')}`)} activeOpacity={0.85}>
                           <Ionicons name="chatbubble-ellipses-outline" size={15} color={colors.ink} />
