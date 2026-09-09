@@ -68,10 +68,13 @@ export default function Login() {
   const mmss = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`;
 
   async function sendOtp() {
-    if (!email) return toast.show('Please enter your email', 'error');
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) return toast.show('Please enter your email', 'error');
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) return toast.show('Please enter a valid email address', 'error');
+    setEmail(cleanEmail);
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/api/auth/request-otp`, { email });
+      await axios.post(`${API_URL}/api/auth/request-otp`, { email: cleanEmail });
       setOtp('');
       setStep('otp');
       toast.show('Code sent to your email', 'success');
@@ -86,7 +89,7 @@ export default function Login() {
     if (otp.length < OTP_LEN) return toast.show('Please enter the 6-digit code', 'error');
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/api/auth/verify-otp`, { email, otp });
+      const res = await axios.post(`${API_URL}/api/auth/verify-otp`, { email: email.trim().toLowerCase(), otp });
       await login(res.data.token, res.data.user);
       router.replace('/home');
     } catch (err: any) {
