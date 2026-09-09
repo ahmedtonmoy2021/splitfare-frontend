@@ -237,7 +237,11 @@ export default function Search() {
         <View style={styles.empty}>
           <Ionicons name="car-outline" size={48} color="#c3cbd8" />
           <Text style={styles.emptyText}>No rides found on this route yet.</Text>
-          <Text style={styles.emptySub}>Try again later or adjust your locations.</Text>
+          <Text style={styles.emptySub}>Try a different time, or check back later — new rides are added often.</Text>
+          <TouchableOpacity style={styles.emptyRetryBtn} onPress={() => setStep('search')} activeOpacity={0.9}>
+            <Ionicons name="search" size={16} color={colors.ink} />
+            <Text style={styles.emptyRetryText}>Change route</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <>
@@ -297,12 +301,6 @@ export default function Search() {
         </>
       )}
 
-      <View style={[styles.r_footer, { paddingBottom: insets.bottom + 16 }]}>
-        <Text style={styles.r_footText}>Nothing fits?</Text>
-        <TouchableOpacity style={styles.r_postBtn} onPress={() => router.push('/post-ride')} activeOpacity={0.9}>
-          <Text style={styles.r_postText}>Post your own ride</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -331,7 +329,9 @@ const styles = StyleSheet.create({
   routeChipText: { fontSize: 14, color: colors.ink, fontFamily: fonts.semi },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
   emptyText: { fontSize: 16, color: colors.ink, marginTop: 12, fontFamily: fonts.bold },
-  emptySub: { fontSize: 14, color: colors.textMuted, marginTop: 4, fontFamily: fonts.med },
+  emptySub: { fontSize: 14, color: colors.textMuted, marginTop: 4, fontFamily: fonts.med, textAlign: 'center', paddingHorizontal: 30 },
+  emptyRetryBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#cfd6e0', borderRadius: radius.md, paddingVertical: 12, paddingHorizontal: 20, marginTop: 18 },
+  emptyRetryText: { color: colors.ink, fontFamily: fonts.bold, fontSize: 14 },
   rideCard: { borderWidth: 1, borderColor: '#e8e8e8', borderRadius: 16, padding: 16, marginBottom: 14, backgroundColor: '#fff' },
   rideTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#010E39', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
